@@ -8,12 +8,12 @@ router = APIRouter(prefix="/api/purchase-orders", tags=["Purchase Orders"])
 
 @router.get("/")
 async def get_all_purchase_orders():
-    return purchase_orders_collection.find_all()
+    return await purchase_orders_collection.find_all()
 
 
 @router.get("/{po_id}")
 async def get_purchase_order(po_id: str):
-    po = purchase_orders_collection.find_one(po_id)
+    po = await purchase_orders_collection.find_one(po_id)
     if not po:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return po
@@ -23,8 +23,8 @@ async def get_purchase_order(po_id: str):
 async def create_purchase_order(data: PurchaseOrderCreate):
     po_dict = data.model_dump()
     po_dict["created_at"] = datetime.utcnow().isoformat()
-    doc_id = purchase_orders_collection.insert_one(po_dict)
-    return purchase_orders_collection.find_one(doc_id)
+    doc_id = await purchase_orders_collection.insert_one(po_dict)
+    return await purchase_orders_collection.find_one(doc_id)
 
 
 @router.put("/{po_id}")
@@ -32,15 +32,15 @@ async def update_purchase_order(po_id: str, data: PurchaseOrderUpdate):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No data to update")
-    found = purchase_orders_collection.update_one(po_id, update_data)
+    found = await purchase_orders_collection.update_one(po_id, update_data)
     if not found:
         raise HTTPException(status_code=404, detail="Purchase order not found")
-    return purchase_orders_collection.find_one(po_id)
+    return await purchase_orders_collection.find_one(po_id)
 
 
 @router.delete("/{po_id}")
 async def delete_purchase_order(po_id: str):
-    found = purchase_orders_collection.delete_one(po_id)
+    found = await purchase_orders_collection.delete_one(po_id)
     if not found:
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return {"message": "Purchase order deleted successfully"}

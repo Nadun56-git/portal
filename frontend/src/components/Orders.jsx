@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Plus, Search, Edit2, Trash2, X, Download } from 'lucide-react'
+import API_URL from '../config/api'
 
-const API_URL = 'http://localhost:8001'
 
 export default function Orders() {
   const [orders, setOrders] = useState([])

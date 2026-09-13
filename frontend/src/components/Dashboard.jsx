@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Users, Truck, Package, ShoppingCart, DollarSign, Clock, Download, Calendar, TrendingUp, BarChart3 } from 'lucide-react'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Area } from 'recharts'
+import API_URL from '../config/api'
 
-const API_URL = 'http://localhost:8001'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)

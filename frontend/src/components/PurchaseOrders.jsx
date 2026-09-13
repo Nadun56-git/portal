@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { Plus, Search, Edit2, Trash2, X, Download, Printer } from 'lucide-react'
-
-const API_URL = 'http://localhost:8001'
+import API_URL from '../config/api'
 
 export default function PurchaseOrders() {
   const [pos, setPos] = useState([])

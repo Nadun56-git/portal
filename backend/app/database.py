@@ -1,86 +1,75 @@
-import json
 import os
 from datetime import datetime
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ReturnDocument
+from dotenv import load_dotenv
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+load_dotenv()
 
-COLLECTIONS = ["clients", "suppliers", "products", "orders", "purchase_orders"]
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017/potrall")
+DB_NAME = os.getenv("DB_NAME", "potrall")
 
-
-def _load(collection_name: str) -> list:
-    path = os.path.join(DATA_DIR, f"{collection_name}.json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
-    return []
+client = AsyncIOMotorClient(MONGODB_URL)
+db = client[DB_NAME]
+_counters = db["_counters"]
 
 
-def _save(collection_name: str, data: list):
-    path = os.path.join(DATA_DIR, f"{collection_name}.json")
-    with open(path, "w") as f:
-        json.dump(data, f, default=str, indent=2)
+def _clean(doc: dict) -> dict:
+    """Ensure _id is always a plain string in responses."""
+    if doc and "_id" in doc:
+        doc["_id"] = str(doc["_id"])
+    return doc
 
 
 class Collection:
     def __init__(self, name: str):
         self.name = name
-        self._counter = len(_load(name))
+        self.col = db[name]
 
-    def _next_id(self) -> str:
-        self._counter += 1
-        return str(self._counter).zfill(6)
+    async def _next_id(self) -> str:
+        result = await _counters.find_one_and_update(
+            {"_id": self.name},
+            {"$inc": {"seq": 1}},
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+        return str(result["seq"]).zfill(6)
 
-    def find_all(self) -> list:
-        return sorted(_load(self.name), key=lambda x: x.get("created_at", ""), reverse=True)
+    async def find_all(self) -> list:
+        docs = await self.col.find().sort("created_at", -1).to_list(None)
+        return [_clean(d) for d in docs]
 
-    def find_one(self, doc_id: str) -> dict | None:
-        for doc in _load(self.name):
-            if doc["_id"] == doc_id:
-                return doc
-        return None
+    async def find_one(self, doc_id: str) -> dict | None:
+        doc = await self.col.find_one({"_id": doc_id})
+        return _clean(doc) if doc else None
 
-    def insert_one(self, data: dict) -> str:
-        docs = _load(self.name)
-        doc_id = self._next_id()
+    async def insert_one(self, data: dict) -> str:
+        doc_id = await self._next_id()
         data["_id"] = doc_id
         if "created_at" not in data:
             data["created_at"] = datetime.utcnow().isoformat()
-        docs.append(data)
-        _save(self.name, docs)
+        await self.col.insert_one(data)
         return doc_id
 
-    def update_one(self, doc_id: str, update: dict) -> bool:
-        docs = _load(self.name)
-        for i, doc in enumerate(docs):
-            if doc["_id"] == doc_id:
-                docs[i].update(update)
-                _save(self.name, docs)
-                return True
-        return False
+    async def update_one(self, doc_id: str, update: dict) -> bool:
+        result = await self.col.update_one({"_id": doc_id}, {"$set": update})
+        return result.matched_count > 0
 
-    def delete_one(self, doc_id: str) -> bool:
-        docs = _load(self.name)
-        new_docs = [d for d in docs if d["_id"] != doc_id]
-        if len(new_docs) < len(docs):
-            _save(self.name, new_docs)
-            return True
-        return False
+    async def delete_one(self, doc_id: str) -> bool:
+        result = await self.col.delete_one({"_id": doc_id})
+        return result.deleted_count > 0
 
-    def count(self, filter: dict = None) -> int:
-        docs = _load(self.name)
-        if filter:
-            return sum(1 for d in docs if all(d.get(k) == v for k, v in filter.items()))
-        return len(docs)
+    async def count(self, filter: dict = None) -> int:
+        return await self.col.count_documents(filter or {})
 
-    def find_with_filter(self, filter: dict) -> list:
-        docs = _load(self.name)
-        return [d for d in docs if all(d.get(k) == v for k, v in filter.items())]
+    async def find_with_filter(self, filter: dict) -> list:
+        docs = await self.col.find(filter).to_list(None)
+        return [_clean(d) for d in docs]
 
 
-# Collection instances
-clients_collection = Collection("clients")
-suppliers_collection = Collection("suppliers")
-products_collection = Collection("products")
-orders_collection = Collection("orders")
-purchase_orders_collection = Collection("purchase_orders")
+# ── Collection instances ──────────────────────────────────
+clients_collection          = Collection("clients")
+suppliers_collection        = Collection("suppliers")
+products_collection         = Collection("products")
+orders_collection           = Collection("orders")
+purchase_orders_collection  = Collection("purchase_orders")

@@ -3,8 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import { Printer, ArrowLeft, Edit3 } from 'lucide-react'
 import GrnPrint from './GrnPrint'
-
-const API_URL = 'http://localhost:8001'
+import API_URL from '../config/api'
 
 export default function GrnPreview() {
   const { id } = useParams()

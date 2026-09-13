@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Plus, Search, Edit2, Trash2, X, Download } from 'lucide-react'
+import API_URL from '../config/api'
 
-const API_URL = 'http://localhost:8001'
 const emptyForm = {
   name: '', type: '', contact_person: '', phone: '', email: '',
   address: '', product_service: '', payment_terms: 'Net 30', monthly_avg: 0
