@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { Plus, Search, Edit2, Trash2, X, Download } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Download, Printer } from 'lucide-react'
 
 const API_URL = 'http://localhost:8001'
 
@@ -172,6 +173,12 @@ export default function PurchaseOrders() {
                   </span>
                 </td>
                 <td className="px-6 py-4 flex gap-2">
+                  {po.status === 'received' && (
+                    <Link to={`/purchase-orders/${po._id}/grn`} title="Preview GRN"
+                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded">
+                      <Printer size={16} />
+                    </Link>
+                  )}
                   <button onClick={() => handleEdit(po)} className="p-1.5 text-navy-600 hover:bg-navy-50 rounded"><Edit2 size={16} /></button>
                   <button onClick={() => handleDelete(po._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={16} /></button>
                 </td>

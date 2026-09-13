@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "_id": "000001",
+    "supplier_id": "000001",
+    "date": "2026-07-23",
+    "expected_delivery": "2026-07-25",
+    "received_date": "2026-07-23",
+    "status": "received",
+    "grn_number": "01450",
+    "requisition_no": "N/A",
+    "requisition_by": "Chaminda",
+    "received_by": "CHAMINDA PEREIRA",
+    "received_by_phone": "077 990 779",
+    "delivery_required": "ASAP",
+    "currency": "LKR",
+    "total_cost": 290528.72,
+    "items": [
+      {
+        "product_id": "000001",
+        "product_name": "AutoCAD LT commercial single - User Annual subscription renewal",
+        "quantity": 2,
+        "unit_cost": 145264.36,
+        "total": 290528.72
+      }
+    ],
+    "created_at": "2026-07-23T00:00:00"
+  }
+]
